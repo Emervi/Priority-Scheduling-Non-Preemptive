@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Priority Scheduling Non-Preemptive: Analogi Sehari-hari</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mut:#667085;--bd:#e4e7ee;--ac:#4f46e5;--ac2:#eef0ff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1320;--card:#181d2e;--tx:#e8ebf5;--mut:#9aa3b8;--bd:#2a3150;--ac:#818cf8;--ac2:#232a4a}}
+:root[data-theme="dark"]{--bg:#0f1320;--card:#181d2e;--tx:#e8ebf5;--mut:#9aa3b8;--bd:#2a3150;--ac:#818cf8;--ac2:#232a4a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 48px}
+header{text-align:center;padding:28px 0 12px}
+header h1{margin:0 0 8px;font-size:clamp(1.5rem,4vw,2.2rem);line-height:1.2}
+header h1 span{background:linear-gradient(90deg,#4f46e5,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{margin:0 auto;max-width:640px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;margin-top:16px;box-shadow:0 2px 10px rgba(20,30,60,.05)}
+h2{margin:0 0 10px;font-size:1.15rem}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.rule{background:var(--ac2);border-radius:12px;padding:12px 14px;font-size:.93rem}
+.rule b{display:block;margin-bottom:2px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab,button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:10px;transition:.15s}
+.tab:hover,button:hover{border-color:var(--ac)}
+.tab.on,button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+button.sm{padding:4px 10px;font-size:.85rem}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem;min-width:460px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--bd)}
+th{color:var(--mut);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em}
+input[type=number],input[type=text]{font:inherit;width:100%;max-width:130px;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
+input[type=number]{max-width:70px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.hint{color:var(--mut);font-size:.85rem}
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.stage{grid-template-columns:1fr}}
+.box{border:2px dashed var(--bd);border-radius:14px;padding:12px;min-height:110px}
+.box h3{margin:0 0 8px;font-size:.85rem;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.chip{display:inline-flex;align-items:center;gap:6px;margin:3px;padding:6px 10px;border-radius:999px;color:#fff;font-size:.88rem;font-weight:600;animation:pop .3s}
+.chip small{opacity:.9;font-weight:500}
+.chip.win{outline:3px solid var(--ac);outline-offset:2px}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+#log{background:var(--ac2);border-radius:12px;padding:12px 14px;margin-top:12px;min-height:48px;font-size:.95rem}
+.gantt{display:flex;min-height:46px;border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:var(--bg)}
+.gb{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;min-width:0;animation:pop .3s}
+.gb.idle{background:repeating-linear-gradient(45deg,var(--bd),var(--bd) 6px,transparent 6px,transparent 12px);color:var(--mut)}
+.axis{position:relative;height:22px;margin-top:4px;font-size:.78rem;color:var(--mut)}
+.axis span{position:absolute;transform:translateX(-50%)}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.stat{flex:1;min-width:150px;background:var(--ac2);border-radius:12px;padding:10px 14px}
+.stat b{display:block;font-size:1.4rem}
+.stat span{color:var(--mut);font-size:.82rem}
+ul.pts{margin:0;padding-left:18px}
+.theme{position:absolute;right:16px;top:calc(12px + env(safe-area-inset-top,0px))}
+</style>
+</head>
+<body>
+<button class="theme sm" id="themeBtn" aria-label="Ganti tema">🌓</button>
+<div class="wrap">
+<header>
+  <h1>Priority Scheduling <span>Non-Preemptive</span></h1>
+  <p>Cara CPU memilih proses, dijelaskan lewat antrean yang sering kita temui sehari-hari.</p>
+</header>
+
+<section class="card">
+  <h2>🏥 Analogi: Antrean IGD Rumah Sakit</h2>
+  <p>Bayangkan satu dokter jaga (= <b>CPU</b>) dan beberapa pasien (= <b>proses</b>) yang datang di waktu berbeda. Pasien dengan kondisi paling gawat diberi <b>prioritas</b> lebih tinggi (angka lebih kecil = lebih penting).</p>
+  <div class="rules">
+    <div class="rule"><b>1. Pilih yang paling prioritas</b>Saat dokter kosong, ia memanggil pasien yang sudah menunggu dengan prioritas tertinggi.</div>
+    <div class="rule"><b>2. Tidak boleh menyela (non-preemptive)</b>Jika pasien baru yang lebih gawat datang, dokter tetap menyelesaikan pasien yang sedang ditangani.</div>
+    <div class="rule"><b>3. Prioritas sama? FCFS</b>Yang datang lebih dulu dilayani lebih dulu.</div>
+    <div class="rule"><b>⚠️ Risiko: starvation</b>Pasien prioritas rendah bisa menunggu sangat lama jika terus ada yang lebih gawat.</div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>🧪 Simulasi Interaktif</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Nama</th><th id="thA">Datang</th><th id="thB">Durasi</th><th>Prioritas</th><th></th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table></div>
+  <div class="row">
+    <button id="add">+ Tambah</button>
+    <button class="pri" id="start">▶ Mulai Simulasi</button>
+    <span class="hint" id="unit">Prioritas: angka kecil = lebih penting.</span>
+  </div>
+</section>
+
+<section class="card" id="sim" hidden>
+  <h2>🎬 Jalannya Simulasi</h2>
+  <div class="stage">
+    <div class="box"><h3 id="qTitle">Ruang tunggu</h3><div id="queue"></div></div>
+    <div class="box"><h3 id="cTitle">Sedang dilayani</h3><div id="cpu"></div></div>
+  </div>
+  <div id="log"></div>
+  <div class="row">
+    <button class="pri" id="next">Langkah berikutnya ⏭</button>
+    <button id="auto">⏯ Auto</button>
+    <button id="reset">↺ Ulang</button>
+  </div>
+  <h2 style="margin-top:18px">Gantt Chart</h2>
+  <div class="scroll"><div style="min-width:420px"><div class="gantt" id="gantt"></div><div class="axis" id="axis"></div></div></div>
+  <div class="scroll"><table style="margin-top:12px">
+    <thead><tr><th>Nama</th><th>Datang</th><th>Durasi</th><th>Prio</th><th>Mulai</th><th>Selesai</th><th>Menunggu</th><th>Turnaround</th></tr></thead>
+    <tbody id="res"></tbody></table></div>
+  <div class="stats" id="stats"></div>
+</section>
+
+<section class="card">
+  <h2>💡 Contoh lain di kehidupan nyata</h2>
+  <ul class="pts">
+    <li><b>Loket pelayanan:</b> nasabah prioritas/lansia dipanggil lebih dulu, tapi yang sedang dilayani tidak disuruh berhenti.</li>
+    <li><b>Antrean dapur restoran:</b> pesanan VIP didahulukan, namun masakan yang sudah di atas kompor diselesaikan dulu.</li>
+    <li><b>Printer kantor:</b> dokumen urgent naik ke atas antrean, tapi cetakan yang sedang berjalan tidak dibatalkan.</li>
+  </ul>
+</section>
+</div>
+
+<script>
+const PRESETS={
+ igd:{name:"🏥 IGD",a:"Datang",who:"Pasien",rows:[["Andi",0,5,3],["Budi",1,3,1],["Citra",2,4,4],["Dewi",3,2,2],["Eko",4,3,1]],srv:"Dokter",wait:"Ruang tunggu",ico:"🩺"},
+ bank:{name:"🏦 Loket",a:"Tiba",who:"Nasabah",rows:[["Pak Joko",0,6,2],["Bu Sari",2,2,1],["Rina",3,4,3],["Tono",5,3,2]],srv:"Teller",wait:"Kursi antre",ico:"🧾"},
+ dapur:{name:"🍜 Dapur",a:"Order masuk",who:"Pesanan",rows:[["Nasgor",0,4,3],["Mie Ayam",1,3,2],["Sate VIP",2,5,1],["Es Teh",3,1,4]],srv:"Koki",wait:"Daftar pesanan",ico:"🔥"}
+};
+const $=s=>document.querySelector(s);
+const col=i=>`hsl(${(i*67+235)%360} 62% 48%)`;
+let cur="igd",procs=[],sched=[],step=0,timer=null;
+
+function renderTabs(){
+ $("#tabs").innerHTML=Object.entries(PRESETS).map(([k,p])=>`<button class="tab ${k==cur?'on':''}" data-k="${k}">${p.name}</button>`).join("");
+ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{cur=b.dataset.k;load();});
+}
+function load(){
+ const p=PRESETS[cur];procs=p.rows.map(r=>({n:r[0],a:r[1],b:r[2],p:r[3]}));
+ $("#thA").textContent=p.a;$("#qTitle").textContent=p.wait;$("#cTitle").textContent=p.srv+" sedang melayani";
+ renderTabs();renderTable();$("#sim").hidden=true;stop();
+}
+function renderTable(){
+ $("#tbody").innerHTML=procs.map((x,i)=>`<tr>
+ <td><span class="dot" style="background:${col(i)}"></span><input type="text" value="${x.n}" data-i="${i}" data-f="n"></td>
+ <td><input type="number" min="0" value="${x.a}" data-i="${i}" data-f="a"></td>
+ <td><input type="number" min="1" value="${x.b}" data-i="${i}" data-f="b"></td>
+ <td><input type="number" min="1" value="${x.p}" data-i="${i}" data-f="p"></td>
+ <td><button class="sm" data-del="${i}">✕</button></td></tr>`).join("");
+ document.querySelectorAll("#tbody input").forEach(el=>el.oninput=()=>{
+  const x=procs[el.dataset.i],f=el.dataset.f;x[f]=f=="n"?el.value:Math.max(f=="b"||f=="p"?1:0,+el.value||0);});
+ document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(procs.length>1){procs.splice(b.dataset.del,1);renderTable();}});
+}
+$("#add").onclick=()=>{if(procs.length>=8)return;procs.push({n:PRESETS[cur].who+" "+(procs.length+1),a:procs.length,b:3,p:2});renderTable();};
+
+function schedule(){
+ const ps=procs.map((x,i)=>({...x,id:i,done:false}));let t=0,out=[],left=ps.length;
+ while(left){
+  let ready=ps.filter(x=>!x.done&&x.a<=t);
+  if(!ready.length){const nx=Math.min(...ps.filter(x=>!x.done).map(x=>x.a));out.push({idle:true,start:t,end:nx});t=nx;continue;}
+  const sorted=[...ready].sort((a,b)=>a.p-b.p||a.a-b.a||a.id-b.id);
+  const w=sorted[0];
+  out.push({id:w.id,start:t,end:t+w.b,ready:sorted.map(x=>x.id)});
+  w.done=true;w.s=t;w.f=t+w.b;t=w.f;left--;
+ }
+ return out;
+}
+function startSim(){
+ stop();sched=schedule();step=0;$("#sim").hidden=false;draw();
+ $("#sim").scrollIntoView({behavior:"smooth"});
+}
+function chip(i,extra=""){const x=procs[i];return `<span class="chip ${extra}" style="background:${col(i)}">${x.n} <small>P${x.p}</small></span>`;}
+function draw(){
+ const p=PRESETS[cur],total=sched[sched.length-1].end;
+ const shown=sched.slice(0,step);
+ // gantt
+ $("#gantt").innerHTML=shown.map(s=>`<div class="gb ${s.idle?'idle':''}" style="flex:${s.end-s.start};${s.idle?'':'background:'+col(s.id)}">${s.idle?'idle':procs[s.id].n}</div>`).join("")
+  +`<div style="flex:${total-(shown.length?shown[shown.length-1].end:0)}"></div>`;
+ const ticks=[0,...shown.map(s=>s.end)];
+ $("#axis").innerHTML=ticks.map(v=>`<span style="left:${v/total*100}%">${v}</span>`).join("");
+ // result table
+ const fin={};shown.filter(s=>!s.idle).forEach(s=>fin[s.id]=s);
+ $("#res").innerHTML=procs.map((x,i)=>{const s=fin[i];
+  return `<tr><td><span class="dot" style="background:${col(i)}"></span>${x.n}</td><td>${x.a}</td><td>${x.b}</td><td>${x.p}</td>`+
+  (s?`<td>${s.start}</td><td>${s.end}</td><td>${s.start-x.a}</td><td>${s.end-x.a}</td>`:`<td colspan="4" class="hint">menunggu…</td>`)+`</tr>`}).join("");
+ // stage
+ const done=step>=sched.length;
+ const last=shown.filter(s=>!s.idle).slice(-1)[0];
+ if(step==0){$("#queue").innerHTML="";$("#cpu").innerHTML='<span class="hint">Belum dimulai. Klik “Langkah berikutnya”.</span>';$("#log").textContent="Simulasi siap. Waktu = 0.";$("#stats").innerHTML="";}
+ else{
+  const s=shown[shown.length-1];
+  if(s.idle){$("#queue").innerHTML="";$("#cpu").innerHTML='<span class="hint">😴 '+p.srv+' menganggur</span>';
+   $("#log").textContent=`Waktu ${s.start}–${s.end}: belum ada ${p.who.toLowerCase()}, ${p.srv.toLowerCase()} menganggur.`;}
+  else{
+   $("#queue").innerHTML=s.ready.slice(1).map(i=>chip(i)).join("")||'<span class="hint">Kosong</span>';
+   $("#cpu").innerHTML=chip(s.id,"win")+`<div class="hint">${p.ico} selesai pada waktu ${s.end}</div>`;
+   const w=procs[s.id],others=s.ready.slice(1);
+   let why=others.length?`Dipilih karena prioritasnya <b>${w.p}</b> paling tinggi di antara ${s.ready.length} yang menunggu`+(others.some(o=>procs[o].p==w.p)?" (seri → yang datang lebih dulu)":"")+".":"Hanya dia yang menunggu.";
+   const late=procs.map((x,i)=>({x,i})).filter(o=>o.x.a>s.start&&o.x.a<s.end&&o.x.p<w.p);
+   if(late.length)why+=` <br>🚫 <b>${late.map(o=>o.x.n).join(", ")}</b> datang di tengah layanan dengan prioritas lebih tinggi, tapi <b>tidak boleh menyela</b> (non-preemptive).`;
+   $("#log").innerHTML=`<b>Waktu ${s.start}:</b> ${p.srv} memanggil <b>${w.n}</b>. ${why}`;
+  }
+ }
+ if(done){
+  const r=Object.values(fin),n=r.length;
+  const aw=r.reduce((a,s)=>a+s.start-procs[s.id].a,0)/n,at=r.reduce((a,s)=>a+s.end-procs[s.id].a,0)/n;
+  $("#stats").innerHTML=`<div class="stat"><b>${aw.toFixed(2)}</b><span>Rata-rata waktu tunggu</span></div><div class="stat"><b>${at.toFixed(2)}</b><span>Rata-rata turnaround</span></div><div class="stat"><b>${total}</b><span>Total waktu selesai</span></div>`;
+  $("#next").disabled=true;stop();
+ } else $("#next").disabled=false;
+}
+function stop(){clearInterval(timer);timer=null;$("#auto").textContent="⏯ Auto";}
+$("#start").onclick=startSim;
+$("#next").onclick=()=>{if(step<sched.length){step++;draw();}};
+$("#reset").onclick=()=>{stop();step=0;draw();};
+$("#auto").onclick=()=>{
+ if(timer){stop();return;}
+ if(step>=sched.length){step=0;}
+ $("#auto").textContent="⏸ Jeda";
+ timer=setInterval(()=>{if(step<sched.length){step++;draw();}else stop();},1400);
+};
+$("#themeBtn").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()=="#0f1320";r.dataset.theme=d?"light":"dark";};
+load();
+</script>
+</body>
+</html>
